@@ -81,14 +81,19 @@ class App:
     WIDTH = 600
     HEIGHT = 600    
     SEG_SIZE = 10 #Tamanho de cada quadrado
-    def __init__(self, screen):  
+    def __init__(self, screen, level):  
         self.screen = screen
+        self.level = level
 
         #iniciação da cobra, definindo a primeira posição como o meio da tela
+        self.wallOne = pygame.Rect(0, 180, 480, 10)
+        self.wallTwo = pygame.Rect(330, 450, 10, 150)
+        self.wallThree = pygame.Rect(330, 450, 250, 10)
+
         self.initialCoordinate = Coordinate(floor(self.WIDTH/2)-self.SEG_SIZE, floor(self.HEIGHT/2)-self.SEG_SIZE)
         self.snake = Snake(10, Direction.RIGHT, self.initialCoordinate, self.SEG_SIZE)
         self.food = None
-        self.generateFood()                
+        self.generateFood()
 
     def generateFood(self):
         while(not self.foodValid()):
@@ -105,6 +110,14 @@ class App:
             if(self.food.__eq__(self.snake.getSegment(i))):
                 return False
 
+        if self.level == 2:
+            if(self.food.__eq__(self.wallOne)):
+                return False
+            if(self.food.__eq__(self.wallTwo)):
+                return False
+            if(self.food.__eq__(self.wallThree)):
+                return False
+
         return True    
 
     def drawSnake(self):
@@ -116,6 +129,10 @@ class App:
 
     def drawBackground(self):
         self.screen.fill((0,0,0))
+        if self.level == 2:
+            pygame.draw.rect(self.screen,(255, 255, 255), self.wallOne)
+            pygame.draw.rect(self.screen,(255, 255, 255), self.wallTwo)
+            pygame.draw.rect(self.screen,(255, 255, 255), self.wallThree)
 
     def checkCollision(self):
         head = self.snake.getSegment(0)
@@ -133,6 +150,14 @@ class App:
         if(head.top > self.HEIGHT-self.SEG_SIZE):
             return True
 
+        if self.level == 2:
+            if self.wallOne.colliderect(head):
+                return True
+            if self.wallTwo.colliderect(head):
+                return True
+            if self.wallThree.colliderect(head):
+                return True
+
         return False
 
     def checkFood(self):
@@ -140,46 +165,143 @@ class App:
         if head.colliderect(self.food):
             return True
 
+    def printScreen(self, txt, x, y):
+        font = pygame.font.Font('freesansbold.ttf', 32)
+        text = font.render(txt, True, (255,255,255), (0,0,0))
+        textRect = text.get_rect()
+        textRect.center = (x, y)
+        self.screen.blit(text, textRect)
+
+def levelOne(screen):
+    over = False
+    winn = False
+    points = 0
+
+    game = App(screen, 1)
+
+    while not winn and not over:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                over = True
+
+        key_pressed = pygame.key.get_pressed()
+        if key_pressed[pygame.K_UP]:
+            if not game.snake.direction == Direction.DOWN:
+                game.snake.changeDir(Direction.UP)
+        elif key_pressed[pygame.K_DOWN]:
+            if not game.snake.direction == Direction.UP:
+                game.snake.changeDir(Direction.DOWN)
+        elif key_pressed[pygame.K_RIGHT]:
+            if not game.snake.direction == Direction.LEFT:
+                game.snake.changeDir(Direction.RIGHT)
+        elif key_pressed[pygame.K_LEFT]:
+            if not game.snake.direction == Direction.RIGHT:
+                game.snake.changeDir(Direction.LEFT)
+
+        game.snake.incPos()
+        game.drawBackground()
+        game.drawFood()
+        game.drawSnake()
+        game.printScreen(str(points),20,20)
+        game.printScreen('Level 1',300,20)
+        pygame.display.flip()
+
+        over = game.checkCollision()        
+        if game.checkFood():
+            game.snake.incSize()
+            game.generateFood()
+            points += 1
+            if points == 1:
+                winn = True
+
+        clock.tick(15)
+    
+    return winn
+
+def levelTwo(screen):
+    over = False
+    winn = False
+    points = 0
+
+    game = App(screen, 2)
+
+    while not winn and not over:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                over = True
+
+        key_pressed = pygame.key.get_pressed()
+        if key_pressed[pygame.K_UP]:
+            if not game.snake.direction == Direction.DOWN:
+                game.snake.changeDir(Direction.UP)
+        elif key_pressed[pygame.K_DOWN]:
+            if not game.snake.direction == Direction.UP:
+                game.snake.changeDir(Direction.DOWN)
+        elif key_pressed[pygame.K_RIGHT]:
+            if not game.snake.direction == Direction.LEFT:
+                game.snake.changeDir(Direction.RIGHT)
+        elif key_pressed[pygame.K_LEFT]:
+            if not game.snake.direction == Direction.RIGHT:
+                game.snake.changeDir(Direction.LEFT)
+
+        game.snake.incPos()
+        game.drawBackground()
+        game.drawFood()
+        game.drawSnake()
+        game.printScreen(str(points),20,20)
+        game.printScreen('Level 2',300,20)
+        pygame.display.flip()
+
+        over = game.checkCollision()        
+        if game.checkFood():
+            game.snake.incSize()
+            game.generateFood()
+            points += 1
+            if points == 10:
+                winn = True
+
+        clock.tick(15)
+
+    return winn
+
+def endScreen(screen):
+    over = False
+    quitGame = False
+    game = App(screen, 0)
+
+    while not quitGame and not over:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                over = True
+
+        key_pressed = pygame.key.get_pressed()
+        if key_pressed[pygame.K_BACKSPACE]:
+            quitGame = True
+        elif key_pressed[pygame.K_SPACE]:
+            over = True
+
+        game.drawBackground()
+        game.printScreen('Game Over',300,20)
+        game.printScreen('Press [BACKSPACE] to quit',300,200)
+        game.printScreen('Press [SPACE] to restart',300,300)
+        pygame.display.flip()
+
+        clock.tick(15)
+
+    return quitGame
+
 
 pygame.init()
 screen = pygame.display.set_mode((600,600))
-game = App(screen)
-points = 0
 
 clock = pygame.time.Clock()
 
-winn = False
-over = False
+win2 = False
+quitGame = False
+while not quitGame:
+    winn = levelOne( screen)
+    
+    if winn:
+        win2 = levelTwo( screen)
 
-while not winn and not over:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            over = True
-
-    key_pressed = pygame.key.get_pressed()
-    if key_pressed[pygame.K_UP]:
-        if not game.snake.direction == Direction.DOWN:
-            game.snake.changeDir(Direction.UP)
-    elif key_pressed[pygame.K_DOWN]:
-        if not game.snake.direction == Direction.UP:
-            game.snake.changeDir(Direction.DOWN)
-    elif key_pressed[pygame.K_RIGHT]:
-        if not game.snake.direction == Direction.LEFT:
-            game.snake.changeDir(Direction.RIGHT)
-    elif key_pressed[pygame.K_LEFT]:
-        if not game.snake.direction == Direction.RIGHT:
-            game.snake.changeDir(Direction.LEFT)
-
-    game.snake.incPos()
-    game.drawBackground()
-    game.drawFood()
-    game.drawSnake()
-    pygame.display.flip()
-
-    over = game.checkCollision()        
-    if game.checkFood():
-        game.snake.incSize()
-        game.generateFood()
-        points += 1
-
-    clock.tick(15)
+    quitGame = endScreen(screen)

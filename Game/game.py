@@ -3,7 +3,49 @@ from math import floor
 from random import randint
 import pygame
 
-class Direction(Enum):
+##############################################################################################
+## LEDS
+##############################################################################################
+
+# pinos 2, 3 e 4 (labuino) => ACK (7), BUSY(8), ERROR(4) 
+# pinos 22, 23, 24 na placa do raspberry => 17, 18, 27
+
+import RPi.GPIO as GPIO
+import time
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+def turnOnOffPin(pin, on):
+    GPIO.setup(pin, GPIO.OUT)
+    if on:
+        GPIO.output(pin, GPIO.HIGH)
+    else:
+        GPIO.output(pin, GPIO.LOW)
+
+def simulateClick(pin)
+    turnOnOffPin(pin, False)
+    time.sleep(0.01)
+    turnOnOffPin(pin, True)
+
+pins = [ 17, 18, 27 ]
+for pin in pins
+    turnOnOffPin(pin, True)
+
+def blinkLedsSequence():
+    simulateClick(pins[0])
+
+def blinkLedsEvenOdd():
+    simulateClick(pins[1])
+
+def blinkLeds():
+    simulateClick(pins[2])
+
+
+##############################################################################################
+## GAME
+##############################################################################################
+    
+class Direction():
     UP = 0
     RIGHT = 1
     DOWN = 2
@@ -173,6 +215,8 @@ class App:
         self.screen.blit(text, textRect)
 
 def levelOne(screen):
+    blinkLeds()
+
     over = False
     winn = False
     points = 0
@@ -257,6 +301,7 @@ def levelTwo(screen):
             game.snake.incSize()
             game.generateFood()
             points += 1
+            blinkLedsSequence()
             if points == 10:
                 winn = True
 
@@ -265,6 +310,7 @@ def levelTwo(screen):
     return winn
 
 def endScreen(screen):
+    blinkLedsEvenOdd()
     over = False
     quitGame = False
     game = App(screen, 0)
